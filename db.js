@@ -27,84 +27,86 @@ const connectDataBase = new Promise((resolve, reject) => {
 
 
 
-// CREDENTIALS QUERY
+// query execution
 
-const userCredentialLookup = (userCredential) => {
+const queryExecution = (query, values) => {
     return new Promise((resolve, reject) => {
-        const query = `
-            SELECT
-                u.username
-                , u.password
-                , upos.position AS user_position
-            FROM
-                ${tableSpace}.users AS u
-                INNER JOIN
-                    ${tableSpace}.user_positions AS upos
-                    ON u.user_position_id = upos.id
-            WHERE
-                u.username = $1
-                AND u.status_id = 1
-                AND u.deleted_at ISNULL;
-        `;
-
-        const values = [
-            userCredential.username
-        ];
-        
         connectDataBase
             .then((client) => {
                 return client.query(query, values);
             }).then((result) => {
-                resolve(result.rows[0]);
+                resolve(result.rows);
             }).catch((err) => {
                 reject(err);
             });
     });
+};
+
+
+
+// CREDENTIALS QUERY
+
+const userCredentialLookup = (userCredential) => {
+    const query = `
+        SELECT
+            u.username
+            , u.password
+            , upos.position AS user_position
+        FROM
+            ${tableSpace}.users AS u
+            INNER JOIN
+                ${tableSpace}.user_positions AS upos
+                ON u.user_position_id = upos.id
+        WHERE
+            u.username = $1
+            AND u.status_id = 1
+            AND u.deleted_at ISNULL;
+    `;
+
+    const values = [
+        userCredential.username
+    ];
+    
+    return queryExecution(query, values);
 };
 
 
 
 // USER POSITIONS QUERIES
 
-// all user positions query proccess
-
-const allUserPositionsQuery = () => {
-    return new Promise((resolve, reject) => {
+const UserPositions = () => {
+    const getAll = () => {
         const query = `
             SELECT
-                id
-                , position
+                upos.id
+                , upos.position
+                , status.description AS status
             FROM
-                ${tableSpace}.user_positions
+                ${tableSpace}.user_positions AS upos
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON upos.status_id = status.id
             WHERE
-                deleted_at ISNULL;
+                upos.deleted_at ISNULL;
         `;
 
         const values = [];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
-};
-
-// active and inactive user positions query
-
-const activeOrInactiveUserPositionsQuery = (userData) => {
-    return new Promise((resolve, reject) => {
+      
+        return queryExecution(query, values);
+    };
+    const getAllActiveOrInactive = (userPositionData) => {
         const query = `
             SELECT
-                id
-                , position
+                upos.id
+                , upos.position
+                , status.description AS status
             FROM
-                ${tableSpace}.user_positions
+                ${tableSpace}.user_positions AS upos
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON upos.status_id = status.id
             WHERE
-                status_id = (
+                upos.status_id = (
                     SELECT
                         id
                     FROM
@@ -112,67 +114,51 @@ const activeOrInactiveUserPositionsQuery = (userData) => {
                     WHERE
                         description = $1
                 )
-                AND deleted_at ISNULL;
+                AND upos.deleted_at ISNULL;
         `;
 
         const values = [
-            userData.status
+            userPositionData.status
         ];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
-};
 
-// active and inactive user position for id query
-
-const activeAndInactiveUserPositionsForIdQuery = (userData) => {
-    return new Promise((resolve, reject) => {
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForId = (userPositionData) => {
         const query = `
             SELECT
-                id
-                , position
+                upos.id
+                , upos.position
+                , status.description AS status
             FROM
-                ${tableSpace}.user_positions
+                ${tableSpace}.user_positions AS upos
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON upos.status_id = status.id
             WHERE
-                id = $1
-                AND deleted_at ISNULL;
+                upos.id = $1
+                AND upos.deleted_at ISNULL;
         `;
 
         const values = [
-            userData.id
+            userPositionData.id
         ];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
-};
 
-// active or inactive user position for id query
-
-const activeOrInactiveUserPositionsForIdQuery = (userData) => {
-    return new Promise((resolve, reject) => {
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForId = (userPositionData) => {
         const query = `
             SELECT
-                id
-                , position
+                upos.id
+                , upos.position
+                , status.description AS status
             FROM
-                ${tableSpace}.user_positions
+                ${tableSpace}.user_positions AS upos
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON upos.status_id = status.id
             WHERE
-                id = $1
-                AND status_id = (
+                upos.id = $1
+                AND upos.status_id = (
                     SELECT
                         id
                     FROM
@@ -180,68 +166,52 @@ const activeOrInactiveUserPositionsForIdQuery = (userData) => {
                     WHERE
                         description = $2
                 )
-                AND deleted_at ISNULL;
+                AND upos.deleted_at ISNULL;
         `;
 
         const values = [
-            userData.id
-            , userData.status
+            userPositionData.id
+            , userPositionData.status
         ];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
-};
 
-// active and inactive user position for id query
-
-const activeAndInactiveUserPositionsForNameQuery = (userData) => {
-    return new Promise((resolve, reject) => {
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForName = (userPositionData) => {
         const query = `
             SELECT
-                id
-                , position
+                upos.id
+                , upos.position
+                , status.description AS status
             FROM
-                ${tableSpace}.user_positions
+                ${tableSpace}.user_positions AS upos
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON upos.status_id = status.id
             WHERE
-                position LIKE '%'||$1||'%'
-                AND deleted_at ISNULL;
+                upos.position LIKE '%'||$1||'%'
+                AND upos.deleted_at ISNULL;
         `;
 
         const values = [
-            userData.name
+            userPositionData.name
         ];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
-};
 
-// active or inactive user position for name query
-
-const activeOrInactiveUserPositionsForNameQuery = (userData) => {
-    return new Promise((resolve, reject) => {
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForName = (userPositionData) => {
         const query = `
             SELECT
-                id
-                , position
+                upos.id
+                , upos.position
+                , status.description AS status
             FROM
-                ${tableSpace}.user_positions
+                ${tableSpace}.user_positions AS upos
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON upos.status_id = status.id
             WHERE
-                position LIKE '%'||$1||'%'
-                AND status_id = (
+                upos.position LIKE '%'||$1||'%'
+                AND upos.status_id = (
                     SELECT
                         id
                     FROM
@@ -249,68 +219,63 @@ const activeOrInactiveUserPositionsForNameQuery = (userData) => {
                     WHERE
                         description = $2
                 )
-                AND deleted_at ISNULL;
+                AND upos.deleted_at ISNULL;
         `;
 
         const values = [
-            userData.name
-            , userData.status
+            userPositionData.name
+            , userPositionData.status
         ];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
+
+        return queryExecution(query, values);
+    };
+    return {
+        getAll
+        , getAllActiveOrInactive
+        , getActiveAndInactiveForId
+        , getActiveOrInactiveForId
+        , getActiveAndInactiveForName
+        , getActiveOrInactiveForName
+    };
 };
 
 
 
 // USERS QUERIES
 
-// all users query proccess
-
-const allUsersQuery = () => {
-    return new Promise((resolve, reject) => {
+const Users = () => {
+    const getAll = () => {
         const query = `
             SELECT
-                id
-                , name
+                users.id
+                , users.name
+                , status.description AS status
             FROM
                 ${tableSpace}.users
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON users.status_id = status.id
             WHERE
-                deleted_at ISNULL;
+                users.deleted_at ISNULL;
         `;
 
         const values = [];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
-};
-
-// all active or inactive users query
-
-const activeOrInactiveUsersQuery = (userData) => {
-    return new Promise((resolve, reject) => {
+      
+        return queryExecution(query, values);
+    };
+    const getAllActiveOrInactive = (userData) => {
         const query = `
             SELECT
-                id
-                , name
+                users.id
+                , users.name
+                , status.description AS status
             FROM
                 ${tableSpace}.users
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON users.status_id = status.id
             WHERE
-                status_id = (
+                users.status_id = (
                     SELECT
                         id
                     FROM
@@ -318,37 +283,51 @@ const activeOrInactiveUsersQuery = (userData) => {
                     WHERE
                         description = $1
                 )
-                AND deleted_at ISNULL;
+                AND users.deleted_at ISNULL;
         `;
 
         const values = [
             userData.status
         ];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
-};
 
-// active or inactive user for id query
-
-const activeOrInactiveUsersForIdQuery = (userData) => {
-    return new Promise((resolve, reject) => {
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForId = (userData) => {
         const query = `
             SELECT
-                id
-                , name
+                users.id
+                , users.name
+                , status.description AS status
             FROM
                 ${tableSpace}.users
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON users.status_id = status.id
             WHERE
-                id = $1
-                AND status_id = (
+                users.name LIKE '%'||$1||'%'
+                AND users.deleted_at ISNULL;
+        `;
+
+        const values = [
+            userData.name
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForId = (userData) => {
+        const query = `
+            SELECT
+                users.id
+                , users.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.users
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON users.status_id = status.id
+            WHERE
+                users.id = $1
+                AND users.status_id = (
                     SELECT
                         id
                     FROM
@@ -356,68 +335,52 @@ const activeOrInactiveUsersForIdQuery = (userData) => {
                     WHERE
                         description = $2
                 )
-                AND deleted_at ISNULL;
+                AND users.deleted_at ISNULL;
         `;
 
         const values = [
             userData.id
             , userData.status
         ];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
-};
 
-// active and inactive users for name query
-
-const activeAndInactiveUsersForNameQuery = (userData) => {
-    return new Promise((resolve, reject) => {
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForName = (userData) => {
         const query = `
             SELECT
-                id
-                , name
+                users.id
+                , users.name
+                , status.description AS status
             FROM
                 ${tableSpace}.users
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON users.status_id = status.id
             WHERE
-                name LIKE '%'||$1||'%'
-                AND deleted_at ISNULL;
+                users.name LIKE '%'||$1||'%'
+                AND users.deleted_at ISNULL;
         `;
 
         const values = [
             userData.name
         ];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
-};
 
-// active or inactive users for name query
-
-const activeOrInactiveUsersForNameQuery = (userData) => {
-    return new Promise((resolve, reject) => {
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForName = (userData) => {
         const query = `
             SELECT
-                id
-                , name
+                users.id
+                , users.name
+                , status.description AS status
             FROM
                 ${tableSpace}.users
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON users.status_id = status.id
             WHERE
-                name LIKE '%'||$1||'%'
-                AND status_id = (
+                users.name LIKE '%'||$1||'%'
+                AND users.status_id = (
                     SELECT
                         id
                     FROM
@@ -425,29 +388,17 @@ const activeOrInactiveUsersForNameQuery = (userData) => {
                     WHERE
                         description = $2
                 )
-                AND deleted_at ISNULL;
+                AND users.deleted_at ISNULL;
         `;
 
         const values = [
             userData.name
             , userData.status
         ];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
-};
 
-// user data query
-
-const userDataQuery = (userData) => {
-    return new Promise((resolve, reject) => {
+        return queryExecution(query, values);
+    };
+    const getData = (userData) => {
         const query = `
             SELECT
                 users.id
@@ -477,30 +428,814 @@ const userDataQuery = (userData) => {
         const values = [
             userData.id
         ];
-        
-        connectDataBase
-            .then((client) => {
-                return client.query(query, values);
-            }).then((result) => {
-                resolve(result.rows);
-            }).catch((err) => {
-                reject(err);
-            });
-    });
+
+        return queryExecution(query, values);
+    };
+    return {
+        getAll
+        , getAllActiveOrInactive
+        , getActiveAndInactiveForId
+        , getActiveOrInactiveForId
+        , getActiveAndInactiveForName
+        , getActiveOrInactiveForName
+        , getData
+    };
 };
+
+
+
+const Providers = () => {
+    const getAll = () => {
+        const query = `
+            SELECT
+                prov.id
+                , prov.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.providers AS prov
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prov.status_id = status.id
+            WHERE
+                prov.deleted_at ISNULL;
+        `;
+
+        const values = [];
+      
+        return queryExecution(query, values);
+    };
+    const getAllActiveOrInactive = (providerData) => {
+        const query = `
+            SELECT
+                prov.id
+                , prov.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.providers AS prov
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prov.status_id = status.id
+            WHERE
+                prov.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $1
+                )
+                AND prov.deleted_at ISNULL;
+        `;
+
+        const values = [
+            providerData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForId = (providerData) => {
+        const query = `
+            SELECT
+                prov.id
+                , prov.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.providers AS prov
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prov.status_id = status.id
+            WHERE
+                prov.name LIKE '%'||$1||'%'
+                AND prov.deleted_at ISNULL;
+        `;
+
+        const values = [
+            providerData.name
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForId = (providerData) => {
+        const query = `
+            SELECT
+                prov.id
+                , prov.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.providers AS prov
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prov.status_id = status.id
+            WHERE
+                prov.id = $1
+                AND prov.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $2
+                )
+                AND prov.deleted_at ISNULL;
+        `;
+
+        const values = [
+            providerData.id
+            , providerData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForName = (providerData) => {
+        const query = `
+            SELECT
+                prov.id
+                , prov.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.providers AS prov
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prov.status_id = status.id
+            WHERE
+                prov.name LIKE '%'||$1||'%'
+                AND prov.deleted_at ISNULL;
+        `;
+
+        const values = [
+            providerData.name
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForName = (providerData) => {
+        const query = `
+            SELECT
+                prov.id
+                , prov.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.providers AS prov
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prov.status_id = status.id
+            WHERE
+                prov.name LIKE '%'||$1||'%'
+                AND prov.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $2
+                )
+                AND prov.deleted_at ISNULL;
+        `;
+
+        const values = [
+            providerData.name
+            , providerData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getData = (providerData) => {
+        const query = `
+            SELECT
+                id
+                , name
+                , document
+                , phone_ddi
+                , phone_ddd
+                , phone_number
+                , email
+                , address
+                , address_number
+                , district
+                , city
+                , state
+                , zip_code
+            FROM
+                ${tableSpace}.providers
+            WHERE
+                id = $1
+                AND deleted_at ISNULL;
+        `;
+
+        const values = [
+            providerData.id
+        ];
+
+        return queryExecution(query, values);
+    };
+    return {
+        getAll
+        , getAllActiveOrInactive
+        , getActiveAndInactiveForId
+        , getActiveOrInactiveForId
+        , getActiveAndInactiveForName
+        , getActiveOrInactiveForName
+        , getData
+    };
+};
+
+
+
+const ProductGroups = () => {
+    const getAll = () => {
+        const query = `
+            SELECT
+                pgr.id
+                , pgr.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.product_groups AS pgr
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON pgr.status_id = status.id
+            WHERE
+                pgr.deleted_at ISNULL;
+        `;
+
+        const values = [];
+      
+        return queryExecution(query, values);
+    };
+    const getAllActiveOrInactive = (productGroupData) => {
+        const query = `
+            SELECT
+                pgr.id
+                , pgr.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.product_groups AS pgr
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON pgr.status_id = status.id
+            WHERE
+                pgr.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $1
+                )
+                AND pgr.deleted_at ISNULL;
+        `;
+
+        const values = [
+            productGroupData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForId = (productGroupData) => {
+        const query = `
+            SELECT
+                pgr.id
+                , pgr.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.product_groups AS pgr
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON pgr.status_id = status.id
+            WHERE
+                pgr.name LIKE '%'||$1||'%'
+                AND pgr.deleted_at ISNULL;
+        `;
+
+        const values = [
+            productGroupData.name
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForId = (productGroupData) => {
+        const query = `
+            SELECT
+                pgr.id
+                , pgr.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.product_groups AS pgr
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON pgr.status_id = status.id
+            WHERE
+                pgr.id = $1
+                AND pgr.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $2
+                )
+                AND pgr.deleted_at ISNULL;
+        `;
+
+        const values = [
+            productGroupData.id
+            , productGroupData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForName = (productGroupData) => {
+        const query = `
+            SELECT
+                pgr.id
+                , pgr.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.product_groups AS pgr
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON pgr.status_id = status.id
+            WHERE
+                pgr.name LIKE '%'||$1||'%'
+                AND pgr.deleted_at ISNULL;
+        `;
+
+        const values = [
+            productGroupData.name
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForName = (productGroupData) => {
+        const query = `
+            SELECT
+                pgr.id
+                , pgr.name
+                , status.description AS status
+            FROM
+                ${tableSpace}.product_groups AS pgr
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON pgr.status_id = status.id
+            WHERE
+                pgr.name LIKE '%'||$1||'%'
+                AND pgr.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $2
+                )
+                AND pgr.deleted_at ISNULL;
+        `;
+
+        const values = [
+            productGroupData.name
+            , productGroupData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    return {
+        getAll
+        , getAllActiveOrInactive
+        , getActiveAndInactiveForId
+        , getActiveOrInactiveForId
+        , getActiveAndInactiveForName
+        , getActiveOrInactiveForName
+    };
+};
+
+
+
+const Units = () => {
+    const getAll = () => {
+        const query = `
+            SELECT
+                units.id
+                , units.description
+                , units.description AS status
+            FROM
+                ${tableSpace}.units
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON units.status_id = status.id
+            WHERE
+                units.deleted_at ISNULL;
+        `;
+
+        const values = [];
+      
+        return queryExecution(query, values);
+    };
+    const getAllActiveOrInactive = (unitData) => {
+        const query = `
+            SELECT
+                units.id
+                , units.description
+                , units.description AS status
+            FROM
+                ${tableSpace}.units
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON units.status_id = status.id
+            WHERE
+                units.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $1
+                )
+                AND units.deleted_at ISNULL;
+        `;
+
+        const values = [
+            unitData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForId = (unitData) => {
+        const query = `
+            SELECT
+                units.id
+                , units.description
+                , units.description AS status
+            FROM
+                ${tableSpace}.units
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON units.status_id = status.id
+            WHERE
+                units.name LIKE '%'||$1||'%'
+                AND units.deleted_at ISNULL;
+        `;
+
+        const values = [
+            unitData.name
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForId = (unitData) => {
+        const query = `
+            SELECT
+                units.id
+                , units.description
+                , units.description AS status
+            FROM
+                ${tableSpace}.units
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON units.status_id = status.id
+            WHERE
+                units.id = $1
+                AND units.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $2
+                )
+                AND units.deleted_at ISNULL;
+        `;
+
+        const values = [
+            unitData.id
+            , unitData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForName = (unitData) => {
+        const query = `
+            SELECT
+                units.id
+                , units.description
+                , units.description AS status
+            FROM
+                ${tableSpace}.units
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON units.status_id = status.id
+            WHERE
+                units.description LIKE '%'||$1||'%'
+                AND units.deleted_at ISNULL;
+        `;
+
+        const values = [
+            unitData.name
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForName = (unitData) => {
+        const query = `
+            SELECT
+                units.id
+                , units.description
+                , units.description AS status
+            FROM
+                ${tableSpace}.units
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON units.status_id = status.id
+            WHERE
+                units.description LIKE '%'||$1||'%'
+                AND units.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $2
+                )
+                AND units.deleted_at ISNULL;
+        `;
+
+        const values = [
+            unitData.name
+            , unitData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    return {
+        getAll
+        , getAllActiveOrInactive
+        , getActiveAndInactiveForId
+        , getActiveOrInactiveForId
+        , getActiveAndInactiveForName
+        , getActiveOrInactiveForName
+    };
+};
+
+
+
+const Products = () => {
+    const getAll = () => {
+        const query = `
+            SELECT
+                prod.id
+                , prod.name
+                , units.description AS unit
+                , pstk.amount
+                , prod.sale_price
+                , status.description AS status
+            FROM
+                ${tableSpace}.products AS prod
+                INNER JOIN
+                    ${tableSpace}.units
+                    ON prod.unit_id = units.id
+                INNER JOIN
+                    ${tableSpace}.products_stock AS pstk
+                    ON prod.id = pstk.product_id
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prod.status_id = status.id
+            WHERE
+                prod.deleted_at ISNULL;
+        `;
+
+        const values = [];
+      
+        return queryExecution(query, values);
+    };
+    const getAllActiveOrInactive = (productData) => {
+        const query = `
+            SELECT
+                prod.id
+                , prod.name
+                , units.description AS unit
+                , pstk.amount
+                , prod.sale_price
+                , status.description AS status
+            FROM
+                ${tableSpace}.products AS prod
+                INNER JOIN
+                    ${tableSpace}.units
+                    ON prod.unit_id = units.id
+                INNER JOIN
+                    ${tableSpace}.products_stock AS pstk
+                    ON prod.id = pstk.product_id
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prod.status_id = status.id
+            WHERE
+                prod.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $1
+                )
+                AND prod.deleted_at ISNULL;
+        `;
+
+        const values = [
+            productData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForId = (productData) => {
+        const query = `
+            SELECT
+                prod.id
+                , prod.name
+                , units.description AS unit
+                , pstk.amount
+                , prod.sale_price
+                , status.description AS status
+            FROM
+                ${tableSpace}.products AS prod
+                INNER JOIN
+                    ${tableSpace}.units
+                    ON prod.unit_id = units.id
+                INNER JOIN
+                    ${tableSpace}.products_stock AS pstk
+                    ON prod.id = pstk.product_id
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prod.status_id = status.id
+            WHERE
+                prod.name LIKE '%'||$1||'%'
+                AND prod.deleted_at ISNULL;
+        `;
+
+        const values = [
+            productData.name
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForId = (productData) => {
+        const query = `
+            SELECT
+                prod.id
+                , prod.name
+                , units.description AS unit
+                , pstk.amount
+                , prod.sale_price
+                , status.description AS status
+            FROM
+                ${tableSpace}.products AS prod
+                INNER JOIN
+                    ${tableSpace}.units
+                    ON prod.unit_id = units.id
+                INNER JOIN
+                    ${tableSpace}.products_stock AS pstk
+                    ON prod.id = pstk.product_id
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prod.status_id = status.id
+            WHERE
+                prod.id = $1
+                AND prod.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $2
+                )
+                AND prod.deleted_at ISNULL;
+        `;
+
+        const values = [
+            productData.id
+            , productData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveAndInactiveForName = (productData) => {
+        const query = `
+            SELECT
+                prod.id
+                , prod.name
+                , units.description AS unit
+                , pstk.amount
+                , prod.sale_price
+                , status.description AS status
+            FROM
+                ${tableSpace}.products AS prod
+                INNER JOIN
+                    ${tableSpace}.units
+                    ON prod.unit_id = units.id
+                INNER JOIN
+                    ${tableSpace}.products_stock AS pstk
+                    ON prod.id = pstk.product_id
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prod.status_id = status.id
+            WHERE
+                prod.name LIKE '%'||$1||'%'
+                AND prod.deleted_at ISNULL;
+        `;
+
+        const values = [
+            productData.name
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getActiveOrInactiveForName = (productData) => {
+        const query = `
+            SELECT
+                prod.id
+                , prod.name
+                , units.description AS unit
+                , pstk.amount
+                , prod.sale_price
+                , status.description AS status
+            FROM
+                ${tableSpace}.products AS prod
+                INNER JOIN
+                    ${tableSpace}.units
+                    ON prod.unit_id = units.id
+                INNER JOIN
+                    ${tableSpace}.products_stock AS pstk
+                    ON prod.id = pstk.product_id
+                INNER JOIN
+                    ${tableSpace}.status
+                    ON prod.status_id = status.id
+            WHERE
+                prod.name LIKE '%'||$1||'%'
+                AND prod.status_id = (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $2
+                )
+                AND prod.deleted_at ISNULL;
+        `;
+
+        const values = [
+            productData.name
+            , productData.status
+        ];
+
+        return queryExecution(query, values);
+    };
+    const getData = (productData) => {
+        const query = `
+            SELECT
+                prod.id
+                , prod.name
+                , pgrp.name
+                , units.description
+                , prod.cost_price
+                , prod.profit_margin
+                , prod.sale_price
+                , status.description
+            FROM
+                ${tableSpace}.products AS prod
+                    INNER JOIN
+                        ${tableSpace}.product_groups AS pgrp
+                        ON prod.product_group_id = pgrp.id
+                    INNER JOIN
+                        ${tableSpace}.units
+                        ON prod.unit_id = units.id
+                    INNER JOIN
+                        ${tableSpace}.status
+                        ON prod.status_id = status.id
+            WHERE
+                prod.id = $1
+                AND prod.deleted_at ISNULL;
+        `;
+
+        const values = [
+            productData.id
+        ];
+
+        return queryExecution(query, values);
+    };
+    return {
+        getAll
+        , getAllActiveOrInactive
+        , getActiveAndInactiveForId
+        , getActiveOrInactiveForId
+        , getActiveAndInactiveForName
+        , getActiveOrInactiveForName
+        , getData
+    };
+};
+
+
 
 module.exports = {
     userCredentialLookup
-    , allUserPositionsQuery
-    , activeOrInactiveUserPositionsQuery
-    , activeAndInactiveUserPositionsForIdQuery
-    , activeOrInactiveUserPositionsForIdQuery
-    , activeAndInactiveUserPositionsForNameQuery
-    , activeOrInactiveUserPositionsForNameQuery
-    , allUsersQuery
-    , activeOrInactiveUsersQuery
-    , activeOrInactiveUsersForIdQuery
-    , activeAndInactiveUsersForNameQuery
-    , activeOrInactiveUsersForNameQuery
-    , userDataQuery
+    , UserPositions
+    , Users
+    , Providers
+    , ProductGroups
+    , Units
+    , Products
 };

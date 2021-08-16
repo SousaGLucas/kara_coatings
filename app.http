@@ -69,6 +69,7 @@ GET http://localhost:3000/users-status-id/active/1 HTTP/1.1
 ### inactive user for id query proccess
 GET http://localhost:3000/users-status-id/inactive/1 HTTP/1.1
 
+
 ### active and inactive users for name query proccess
 GET http://localhost:3000/users-name/Lucas HTTP/1.1
 
@@ -83,3 +84,152 @@ GET http://localhost:3000/users-status-name/inactive/cas HTTP/1.1
 
 ### user data query proccess
 GET http://localhost:3000/users-data/1 HTTP/1.1
+
+
+
+### PROVIDERS END-POINTS
+
+### all providers query proccess
+GET http://localhost:3000/providers HTTP/1.1
+
+
+### all active providers query proccess
+GET http://localhost:3000/providers-status/active HTTP/1.1
+
+
+### all inactive providers query proccess
+GET http://localhost:3000/providers-status/inactive HTTP/1.1
+
+
+### active provider for id query proccess
+GET http://localhost:3000/providers-status-id/active/1 HTTP/1.1
+
+
+### inactive provider for id query proccess
+GET http://localhost:3000/providers-status-id/inactive/1 HTTP/1.1
+
+
+### active and inactive providers for name query proccess
+GET http://localhost:3000/providers-name/Kara HTTP/1.1
+
+
+### active providers for name query proccess
+GET http://localhost:3000/providers-status-name/active/Kara HTTP/1.1
+
+
+### inactive providers for name query proccess
+GET http://localhost:3000/providers-status-name/inactive/Kara HTTP/1.1
+
+
+### provider data query proccess
+GET http://localhost:3000/providers-data/1 HTTP/1.1
+
+
+
+### PRODUCT GROUPS END-POINTS
+
+### all product groups query proccess
+GET http://localhost:3000/product-groups HTTP/1.1
+
+
+### all active product groups query proccess
+GET http://localhost:3000/product-groups-status/active HTTP/1.1
+
+
+### all inactive product groups query proccess
+GET http://localhost:3000/product-groups-status/inactive HTTP/1.1
+
+
+### active product group for id query proccess
+GET http://localhost:3000/product-groups-status-id/active/1 HTTP/1.1
+
+
+### inactive product group for id query proccess
+GET http://localhost:3000/product-groups-status-id/inactive/1 HTTP/1.1
+
+
+### active and inactive product groups for name query proccess
+GET http://localhost:3000/product-groups-name/ceramicas HTTP/1.1
+
+
+### active product groups for name query proccess
+GET http://localhost:3000/product-groups-status-name/active/ceramicas HTTP/1.1
+
+
+### inactive product groups for name query proccess
+GET http://localhost:3000/product-groups-status-name/inactive/ceramicas HTTP/1.1
+
+
+
+### UNITS END-POINTS
+
+### all units query proccess
+GET http://localhost:3000/units HTTP/1.1
+
+
+### all active units query proccess
+GET http://localhost:3000/units-status/active HTTP/1.1
+
+
+### all inactive units query proccess
+GET http://localhost:3000/units-status/inactive HTTP/1.1
+
+
+### active unit for id query proccess
+GET http://localhost:3000/units-status-id/active/1 HTTP/1.1
+
+
+### inactive unit for id query proccess
+GET http://localhost:3000/units-status-id/inactive/1 HTTP/1.1
+
+
+### active and inactive units for name query proccess
+GET http://localhost:3000/units-name/m2 HTTP/1.1
+
+
+### active units for name query proccess
+GET http://localhost:3000/units-status-name/active/m2 HTTP/1.1
+
+
+### inactive units for name query proccess
+GET http://localhost:3000/units-status-name/inactive/m2 HTTP/1.1
+
+
+
+### PRODUCTS END-POINTS
+
+### all products query proccess
+GET http://localhost:3000/products HTTP/1.1
+
+
+### all active products query proccess
+GET http://localhost:3000/products-status/active HTTP/1.1
+
+
+### all inactive products query proccess
+GET http://localhost:3000/products-status/inactive HTTP/1.1
+
+
+### active product for id query proccess
+GET http://localhost:3000/products-status-id/active/1 HTTP/1.1
+
+
+### inactive product for id query proccess
+GET http://localhost:3000/products-status-id/inactive/1 HTTP/1.1
+
+
+### active and inactive products for name query proccess
+GET http://localhost:3000/products-name/Ceramica HTTP/1.1
+
+
+### active products for name query proccess
+GET http://localhost:3000/products-status-name/active/Ceramica HTTP/1.1
+
+
+### inactive products for name query proccess
+GET http://localhost:3000/products-status-name/inactive/Ceramica HTTP/1.1
+
+
+### product data query proccess
+GET http://localhost:3000/products-data/1 HTTP/1.1
+
