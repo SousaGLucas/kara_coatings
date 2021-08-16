@@ -1,0 +1,85 @@
+### login proccess
+POST http://localhost:3000/login HTTP/1.1
+Content-Type: application/json
+
+{
+    "username": "lucassousa"
+    , "password": "123456"
+}
+
+
+
+### USERS POSITIONS END-POINTS
+
+### all user positions query proccess
+GET http://localhost:3000/user-positions HTTP/1.1
+
+
+### active user positions query proccess
+GET http://localhost:3000/user-positions-status/active HTTP/1.1
+
+
+### inactive user positions query proccess
+GET http://localhost:3000/user-positions-status/inactive HTTP/1.1
+
+
+### user position for id query proccess
+GET http://localhost:3000/user-positions-id/1 HTTP/1.1
+
+
+### active user position for id query proccess
+GET http://localhost:3000/user-positions-status-id/active/1 HTTP/1.1
+
+
+### inactive user position for id query proccess
+GET http://localhost:3000/user-positions-status-id/inactive/1 HTTP/1.1
+
+
+### user position for name query proccess
+GET http://localhost:3000/user-positions-name/dev HTTP/1.1
+
+
+### active user position for name query proccess
+GET http://localhost:3000/user-positions-status-name/active/dev HTTP/1.1
+
+
+### inactive user position for name query proccess
+GET http://localhost:3000/user-positions-status-name/inactive/dev HTTP/1.1
+
+
+
+### USERS END-POINTS
+
+### all users query proccess
+GET http://localhost:3000/users HTTP/1.1
+
+
+### all active users query proccess
+GET http://localhost:3000/users-status/active HTTP/1.1
+
+
+### all inactive users query proccess
+GET http://localhost:3000/users-status/inactive HTTP/1.1
+
+
+### active user for id query proccess
+GET http://localhost:3000/users-status-id/active/1 HTTP/1.1
+
+
+### inactive user for id query proccess
+GET http://localhost:3000/users-status-id/inactive/1 HTTP/1.1
+
+### active and inactive users for name query proccess
+GET http://localhost:3000/users-name/Lucas HTTP/1.1
+
+
+### active users for name query proccess
+GET http://localhost:3000/users-status-name/active/cas HTTP/1.1
+
+
+### inactive users for name query proccess
+GET http://localhost:3000/users-status-name/inactive/cas HTTP/1.1
+
+
+### user data query proccess
+GET http://localhost:3000/users-data/1 HTTP/1.1
