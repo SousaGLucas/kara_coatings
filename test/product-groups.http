@@ -1,0 +1,51 @@
+### PRODUCT GROUPS END-POINTS
+
+### all product groups query proccess
+GET http://localhost:3000/product-groups HTTP/1.1
+
+
+### all active product groups query proccess
+GET http://localhost:3000/product-groups-status/active HTTP/1.1
+
+
+### all inactive product groups query proccess
+GET http://localhost:3000/product-groups-status/inactive HTTP/1.1
+
+
+### active product group for id query proccess
+GET http://localhost:3000/product-groups-status-id/active/1 HTTP/1.1
+
+
+### inactive product group for id query proccess
+GET http://localhost:3000/product-groups-status-id/inactive/1 HTTP/1.1
+
+
+### active and inactive product groups for name query proccess
+GET http://localhost:3000/product-groups-name/ceramicas HTTP/1.1
+
+
+### active product groups for name query proccess
+GET http://localhost:3000/product-groups-status-name/active/ceramicas HTTP/1.1
+
+
+### inactive product groups for name query proccess
+GET http://localhost:3000/product-groups-status-name/inactive/ceramicas HTTP/1.1
+
+
+### product groups record
+POST http://localhost:3000/product-groups HTTP/1.1
+Content-Type: application/json
+
+{
+    "status": "active"
+    , "name": "ceramicas"
+}
+
+### product groups update
+PUT http://localhost:3000/product-groups/2 HTTP/1.1
+Content-Type: application/json
+
+{
+    "status": "active"
+    , "name": "ceramicas"
+}

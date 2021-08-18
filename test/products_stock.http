@@ -1,0 +1,17 @@
+### PRODUCTS STOCK END-POINTS
+
+### all products stock query proccess
+GET http://localhost:3000/products-stock HTTP/1.1
+
+
+### active product for id query proccess
+GET http://localhost:3000/products-stock-id/1 HTTP/1.1
+
+
+### products stock update
+PUT http://localhost:3000/products-stock/1 HTTP/1.1
+Content-Type: application/json
+
+{
+    "amount": "0.00"
+}

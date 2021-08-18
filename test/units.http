@@ -1,0 +1,51 @@
+### UNITS END-POINTS
+
+### all units query proccess
+GET http://localhost:3000/units HTTP/1.1
+
+
+### all active units query proccess
+GET http://localhost:3000/units-status/active HTTP/1.1
+
+
+### all inactive units query proccess
+GET http://localhost:3000/units-status/inactive HTTP/1.1
+
+
+### active unit for id query proccess
+GET http://localhost:3000/units-status-id/active/1 HTTP/1.1
+
+
+### inactive unit for id query proccess
+GET http://localhost:3000/units-status-id/inactive/1 HTTP/1.1
+
+
+### active and inactive units for name query proccess
+GET http://localhost:3000/units-name/m2 HTTP/1.1
+
+
+### active units for name query proccess
+GET http://localhost:3000/units-status-name/active/m2 HTTP/1.1
+
+
+### inactive units for name query proccess
+GET http://localhost:3000/units-status-name/inactive/m2 HTTP/1.1
+
+
+### units record
+POST http://localhost:3000/units HTTP/1.1
+Content-Type: application/json
+
+{
+    "status": "active"
+    , "description": "un"
+}
+
+### units update
+PUT http://localhost:3000/units/1 HTTP/1.1
+Content-Type: application/json
+
+{
+    "status": "active"
+    , "description": "m2"
+}

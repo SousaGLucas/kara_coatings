@@ -1,0 +1,55 @@
+### USERS POSITIONS END-POINTS
+
+### all user positions query proccess
+GET http://localhost:3000/user-positions HTTP/1.1
+
+
+### active user positions query proccess
+GET http://localhost:3000/user-positions-status/active HTTP/1.1
+
+
+### inactive user positions query proccess
+GET http://localhost:3000/user-positions-status/inactive HTTP/1.1
+
+
+### user position for id query proccess
+GET http://localhost:3000/user-positions-id/2 HTTP/1.1
+
+
+### active user position for id query proccess
+GET http://localhost:3000/user-positions-status-id/active/1 HTTP/1.1
+
+
+### inactive user position for id query proccess
+GET http://localhost:3000/user-positions-status-id/inactive/1 HTTP/1.1
+
+
+### user position for name query proccess
+GET http://localhost:3000/user-positions-name/dev HTTP/1.1
+
+
+### active user position for name query proccess
+GET http://localhost:3000/user-positions-status-name/active/dev HTTP/1.1
+
+
+### inactive user position for name query proccess
+GET http://localhost:3000/user-positions-status-name/inactive/dev HTTP/1.1
+
+
+### user positions record
+POST http://localhost:3000/user-positions HTTP/1.1
+Content-Type: application/json
+
+{
+    "position": "almoxarife"
+    , "status": "active"
+}
+
+### user position update
+PUT http://localhost:3000/user-positions/2 HTTP/1.1
+Content-Type: application/json
+
+{
+    "position": "administrador"
+    , "status": "active"
+}

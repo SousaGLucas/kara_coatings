@@ -1,0 +1,77 @@
+### PROVIDERS END-POINTS
+
+### all providers query proccess
+GET http://localhost:3000/providers HTTP/1.1
+
+
+### all active providers query proccess
+GET http://localhost:3000/providers-status/active HTTP/1.1
+
+
+### all inactive providers query proccess
+GET http://localhost:3000/providers-status/inactive HTTP/1.1
+
+
+### active provider for id query proccess
+GET http://localhost:3000/providers-status-id/active/1 HTTP/1.1
+
+
+### inactive provider for id query proccess
+GET http://localhost:3000/providers-status-id/inactive/1 HTTP/1.1
+
+
+### active and inactive providers for name query proccess
+GET http://localhost:3000/providers-name/Kara HTTP/1.1
+
+
+### active providers for name query proccess
+GET http://localhost:3000/providers-status-name/active/Kara HTTP/1.1
+
+
+### inactive providers for name query proccess
+GET http://localhost:3000/providers-status-name/inactive/Kara HTTP/1.1
+
+
+### provider data query proccess
+GET http://localhost:3000/providers-data/1 HTTP/1.1
+
+
+### providers record
+POST http://localhost:3000/providers HTTP/1.1
+Content-Type: application/json
+
+{
+    "status": "active"
+    , "name": "Kara Coatings Filial 1"
+    , "document": "000.000.000/0000-01"
+    , "email": "karacoatingsf1@gmail.com"
+    , "address": "Rua C"
+    , "address_number": "22"
+    , "district": "Centro"
+    , "city": "Morada Nova"
+    , "state": "CE"
+    , "zip_code": "62940-000"
+    , "phone_ddi": "+55"
+    , "phone_ddd": "88"
+    , "phone_number": "00000-0000"
+}
+
+### providers update
+PUT http://localhost:3000/providers/1 HTTP/1.1
+Content-Type: application/json
+
+{
+    "status": "active"
+    , "name": "Kara Coatings Filial 1"
+    , "document": "000.000.000/0000-01"
+    , "email": "karacoatingsf1@gmail.com"
+    , "address": "Rua C"
+    , "address_number": "22"
+    , "district": "Centro"
+    , "city": "Morada Nova"
+    , "state": "CE"
+    , "zip_code": "62940-000"
+    , "phone_ddi": "+55"
+    , "phone_ddd": "88"
+    , "phone_number": "00000-0000"
+}
