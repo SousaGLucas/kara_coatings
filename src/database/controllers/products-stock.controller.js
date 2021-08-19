@@ -37,33 +37,9 @@ const ProductsStock = () => {
 
         return queryExecution(query, values);
     };
-    const update = (data) => {
-        const query = `
-            UPDATE
-                ${tableSpace}.products_stock
-            SET
-                amount = $2
-                , update_at = now()
-                , update_user = $3
-            WHERE
-                product_id = $1
-                AND deleted_at ISNULL
-            RETURNING
-                product_id;
-        `;
-
-        const values = [
-            data.product_id
-            , data.amount
-            , data.user_id
-        ];
-
-        return queryExecution(query, values);
-    };
     return {
         getAll
         , getForId
-        , update
     };
 };
 

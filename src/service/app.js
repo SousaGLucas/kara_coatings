@@ -13,5 +13,6 @@ app.use(require("./routes/product-groups.routes"));
 app.use(require("./routes/units.routes"));
 app.use(require("./routes/products.routes"));
 app.use(require("./routes/products_stock.routes"));
+app.use(require("./routes/purchase-orders.routes"));
 
 module.exports = app;
