@@ -2,15 +2,19 @@ const jwt = require("jsonwebtoken");
 
 const router = require("./index");
 
-const { Providers } = require("../../database/controllers/providers.controler");
+const { providers } = require("../../database/constructors/providers.constructors");
 
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6Imx1Y2Fzc291c2EiLCJ1c2VyX3Bvc2l0aW9uIjoiZGV2ZWxvcGVyIiwiaWF0IjoxNjI5MjA4OTk2fQ.SMwdN94BxFk9nUhgd0Q4B0J5jd0V3AWCpb3mrSQnqqY";
+const errorRecord = require("../../log/log-record");
 
 const authentication = (token) => {
     return new Promise((resolve, reject) => {
         jwt.verify(token, process.env.SECRET, (err) => {
             if (err){
-                reject(err);
+                const error = {
+                    type: "forbidden"
+                    , err: err
+                };
+                reject(error);
             } else {
                 resolve();
             };
@@ -19,26 +23,34 @@ const authentication = (token) => {
 };
 
 router.get("/providers", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     authentication(token)
         .then(() => {
-            Providers()
-                .getAll()
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return providers().getAll();
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/providers-status/:status", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         status: req.params.status
@@ -46,22 +58,30 @@ router.get("/providers-status/:status", (req, res) => {
 
     authentication(token)
         .then(() => {
-            Providers()
-                .getAllActiveOrInactive(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return providers().getAllActiveOrInactive(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/providers-status-id/:id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         id: req.params.id
@@ -69,22 +89,30 @@ router.get("/providers-status-id/:id", (req, res) => {
 
     authentication(token)
         .then(() => {
-            Providers()
-                .getActiveAndInactiveForId(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return providers().getActiveAndInactiveForId(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/providers-status-id/:status/:id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         id: req.params.id
@@ -93,22 +121,30 @@ router.get("/providers-status-id/:status/:id", (req, res) => {
 
     authentication(token)
         .then(() => {
-            Providers()
-                .getActiveOrInactiveForId(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return providers().getActiveOrInactiveForId(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/providers-name/:name", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         name: req.params.name
@@ -116,22 +152,30 @@ router.get("/providers-name/:name", (req, res) => {
 
     authentication(token)
         .then(() => {
-            Providers()
-                .getActiveAndInactiveForName(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return providers().getActiveAndInactiveForName(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/providers-status-name/:status/:name", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         name: req.params.name
@@ -140,22 +184,30 @@ router.get("/providers-status-name/:status/:name", (req, res) => {
 
     authentication(token)
         .then(() => {
-            Providers()
-                .getActiveOrInactiveForName(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return providers().getActiveOrInactiveForName(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/providers-data/:id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         id: req.params.id
@@ -163,22 +215,30 @@ router.get("/providers-data/:id", (req, res) => {
 
     authentication(token)
         .then(() => {
-            Providers()
-                .getData(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return providers().getData(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.post("/providers", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
     
     const data = {
         status: req.body.status
@@ -199,22 +259,34 @@ router.post("/providers", (req, res) => {
     authentication(token)
         .then(() => {
             data.user_id = jwt.decode(token).user_id;
-            Providers()
-                .insert(data)
-                    .then((result) => {
-                        res.status(200).send({"msg": "provider added successfully", "id": result[0].id});
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return providers().insert(data);
+        }).then((result) => {
+            const response = {
+                "id": result[0].id
+                , "msg": "provider added successfully"
+            };
+            res.status(200).send(response);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.put("/providers/:id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
     
     const data = {
         id: req.params.id
@@ -236,17 +308,65 @@ router.put("/providers/:id", (req, res) => {
     authentication(token)
         .then(() => {
             data.user_id = jwt.decode(token).user_id;
-            Providers()
-                .update(data)
-                    .then((result) => {
-                        res.status(200).send({"msg": "provider changed successfully", "id": result[0].id});
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return providers().update(data);
+        }).then((result) => {
+            const response = {
+                "id": result[0].id
+                , "msg": "provider changed successfully"
+            };
+            res.status(200).send(response);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
+        });
+});
+
+router.delete("/providers/:id", (req, res) => {
+    const token = req.cookies.token;
+
+    const data = {
+        id: req.params.id
+    };
+
+    authentication(token)
+        .then(() => {
+            data.user_id = jwt.decode(token).user_id;
+            return providers().deleting(data);
+        }).then(() => {
+            response = {
+                id: data.id
+                , msg: "provider deleted successfully"
+            };
+            res.status(200).send(response);
+        }).catch((err) => {
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 

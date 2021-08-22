@@ -1,6 +1,7 @@
 require('dotenv/config');
 
-const { queryExecution } = require("../database");
+const standardExecution = require("../controllers/standard.controllers");
+
 const tableSpace = process.env.DB_TABLESPACE;
 
 const login = (data) => {
@@ -25,7 +26,7 @@ const login = (data) => {
         data.username
     ];
     
-    return queryExecution(query, values);
+    return standardExecution(query, values);
 };
 
 module.exports = {

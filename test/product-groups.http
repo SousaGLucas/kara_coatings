@@ -13,7 +13,7 @@ GET http://localhost:3000/product-groups-status/inactive HTTP/1.1
 
 
 ### active product group for id query proccess
-GET http://localhost:3000/product-groups-status-id/active/1 HTTP/1.1
+GET http://localhost:3000/product-groups-status-id/active/2 HTTP/1.1
 
 
 ### inactive product group for id query proccess
@@ -38,14 +38,18 @@ Content-Type: application/json
 
 {
     "status": "active"
-    , "name": "ceramicas"
+    , "name": "test"
 }
 
 ### product groups update
-PUT http://localhost:3000/product-groups/2 HTTP/1.1
+PUT http://localhost:3000/product-groups/3 HTTP/1.1
 Content-Type: application/json
 
 {
-    "status": "active"
-    , "name": "ceramicas"
+    "status": "inactive"
+    , "name": "test"
 }
+
+
+### products delete
+DELETE http://localhost:3000/products-groups/3 HTTP/1.1

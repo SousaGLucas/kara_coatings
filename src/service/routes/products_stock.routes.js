@@ -2,15 +2,19 @@ const jwt = require("jsonwebtoken");
 
 const router = require("./index");
 
-const { ProductsStock } = require("../../database/controllers/products-stock.controller");
+const { productsStock } = require("../../database/constructors/products-stock.constructors");
 
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6Imx1Y2Fzc291c2EiLCJ1c2VyX3Bvc2l0aW9uIjoiZGV2ZWxvcGVyIiwiaWF0IjoxNjI5MjA4OTk2fQ.SMwdN94BxFk9nUhgd0Q4B0J5jd0V3AWCpb3mrSQnqqY";
+const errorRecord = require("../../log/log-record");
 
 const authentication = (token) => {
     return new Promise((resolve, reject) => {
         jwt.verify(token, process.env.SECRET, (err) => {
             if (err){
-                reject(err);
+                const error = {
+                    type: "forbidden"
+                    , err: err
+                };
+                reject(error);
             } else {
                 resolve();
             };
@@ -19,26 +23,34 @@ const authentication = (token) => {
 };
 
 router.get("/products-stock", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     authentication(token)
         .then(() => {
-            ProductsStock()
-                .getAll()
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return productsStock().getAll();
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/products-stock-id/:product_id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         product_id: req.params.product_id
@@ -46,17 +58,25 @@ router.get("/products-stock-id/:product_id", (req, res) => {
 
     authentication(token)
         .then(() => {
-            ProductsStock()
-                .getForId(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return productsStock().getForId(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 

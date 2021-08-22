@@ -1,17 +1,17 @@
 require('dotenv/config');
 
+const standardExecution = require("../controllers/standard.controllers");
 const {
-    queryExecution
-    , purchaseOrderGetDataExecution
-    , purchaseOrderInsertExecution
+    purchaseOrderInsertExecution
     , purchaseOrderUpdateExecution
     , purchaseOrderClosingExecution
     , purchaseOrderReceivingExecution
-} = require("../database");
+    , purchaseOrederDeletingExecution
+} = require("../controllers/purchase-orders.controllers");
 
 const tableSpace = process.env.DB_TABLESPACE;
 
-const PurchaseOrders = () => {
+const purchaseOrders = () => {
     const getAll = () => {
         const query = `
             SELECT
@@ -57,9 +57,7 @@ const PurchaseOrders = () => {
                 pohead.deleted_at ISNULL;
         `;
 
-        const values = [];
-      
-        return queryExecution(query, values);
+        return standardExecution(query, []);
     };
     const getAllOpenOrCanceledOrReceived = (data) => {
         const query = `
@@ -118,10 +116,10 @@ const PurchaseOrders = () => {
             data.status
         ];
       
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getData = (data) => {
-        const headerQuery = `
+        const query = `
             SELECT
                 pohead.id
                 , prov.name AS provider_name
@@ -140,7 +138,14 @@ const PurchaseOrders = () => {
                 AND pohead.deleted_at ISNULL;
         `;
 
-        const itemsQuery = `
+        const values = [
+            data.id
+        ];
+
+        return standardExecution(query, values);
+    };
+    const getItems = (data) => {
+        const query = `
             SELECT
                 poitem.product_id
                 , prod.name AS product_name
@@ -172,14 +177,10 @@ const PurchaseOrders = () => {
             data.id
         ];
 
-        return purchaseOrderGetDataExecution(
-            headerQuery
-            , itemsQuery
-            , values
-        );
+        return standardExecution(query, values);
     };
     const insert = (data) => {
-        const headerQuery = `
+        const purchaseOrderHeaderQuery = `
             INSERT INTO
                 ${tableSpace}.purchase_orders_header (
                     user_id
@@ -190,14 +191,7 @@ const PurchaseOrders = () => {
                 )
             VALUES (
                 $1
-                , (
-                    SELECT
-                        id
-                    FROM
-                        ${tableSpace}.providers
-                    WHERE
-                        name = $2
-                )
+                , $2
                 , (
                     SELECT
                         id
@@ -213,15 +207,15 @@ const PurchaseOrders = () => {
                 id;
         `;
 
-        const headerValues = [
+        const purchaseOrderHeaderValues = [
             data.user_id
-            , data.provider
+            , data.provider_id
             , data.status
             , data.total
             , data.user_id
         ];
 
-        const itemsQuery = `
+        const purchaseOrderItemsQuery = `
             INSERT INTO
                 ${tableSpace}.purchase_orders_items (
                     purchase_order_header_id
@@ -256,25 +250,18 @@ const PurchaseOrders = () => {
                 , $6
                 , $7
                 , $8
-            )
-            RETURNING
-                purchase_order_header_id;
+            );
         `;
 
-        const itemsValues = [
-            data.items
-            , data.user_id
-        ];
-
         return purchaseOrderInsertExecution(
-            headerQuery
-            , headerValues
-            , itemsQuery
-            , itemsValues
+            purchaseOrderHeaderQuery
+            , purchaseOrderItemsQuery
+            , purchaseOrderHeaderValues
+            , data
         );
     };
     const update = (data) => {
-        const verificationQuery = `
+        const statusVerificationQuery = `
             SELECT
                 closing_date
             FROM
@@ -283,25 +270,26 @@ const PurchaseOrders = () => {
                 id = $1;
         `;
 
-        const verificationValues = [
+        const statusVerificationValues = [
             data.id
         ];
 
-        const headerQuery = `
+        const purchaseOrderHeaderQuery = `
             UPDATE
                 ${tableSpace}.purchase_orders_header
             SET
-                status_id = (
+                provider_id = $2
+                , status_id = (
                     SELECT
                         id
                     FROM
                         ${tableSpace}.status
                     WHERE
-                        description = $2
+                        description = $3
                 )
-                , total = $3
+                , total = $4
                 , update_at = now()
-                , update_user = $4
+                , update_user = $5
             WHERE
                 id = $1
                 AND deleted_at ISNULL
@@ -309,14 +297,15 @@ const PurchaseOrders = () => {
                 id;
         `;
 
-        const headerValues = [
+        const purchaseOrderHeaderValues = [
             data.id
+            , data.provider_id
             , data.status
             , data.total
             , data.user_id
         ];
 
-        const updateItemsQuery = `
+        const purchaseItemsUpdateQuery = `
             UPDATE
                 ${tableSpace}.purchase_orders_items
             SET
@@ -344,12 +333,10 @@ const PurchaseOrders = () => {
             WHERE
                 purchase_order_header_id = $1
                 AND product_id = $2
-                AND deleted_at ISNULL
-            RETURNING
-                purchase_order_header_id;
+                AND deleted_at ISNULL;
         `;
 
-        const inserItemsQuery = `
+        const purchaseItemsInsertQuery = `
             INSERT INTO
                 ${tableSpace}.purchase_orders_items (
                     purchase_order_header_id
@@ -389,12 +376,7 @@ const PurchaseOrders = () => {
                 purchase_order_header_id;
         `;
 
-        const itemsValues = [
-            data.items
-            , data.user_id
-        ];
-
-        const existingItemsQuery = `
+        const existingPurchaseOrderItemsQuery = `
             SELECT
                 product_id
             FROM
@@ -403,25 +385,26 @@ const PurchaseOrders = () => {
                 purchase_order_header_id = $1;
         `;
 
-        const existingItemsValues = [
+        const existingPurchaseOrderItemsValues = [
             data.id
         ];
 
+
         return purchaseOrderUpdateExecution(
-            headerQuery
-            , headerValues
-            , updateItemsQuery
-            , inserItemsQuery
-            , itemsValues
-            , existingItemsQuery
-            , existingItemsValues
-            , verificationQuery
-            , verificationValues
+            statusVerificationQuery
+            , purchaseOrderHeaderQuery
+            , purchaseItemsUpdateQuery
+            , purchaseItemsInsertQuery
+            , existingPurchaseOrderItemsQuery
+            , statusVerificationValues
+            , purchaseOrderHeaderValues
+            , existingPurchaseOrderItemsValues
+            , data
         );
 
     };
     const closing = (data) => {
-        const verificationQuery = `
+        const statusVerificationQuery = `
             SELECT
                 closing_date
             FROM
@@ -430,7 +413,11 @@ const PurchaseOrders = () => {
                 id = $1;
         `;
 
-        const closingQuery = `
+        const statusVerificationValues = [
+            data.id
+        ];
+
+        const closingPurchaseOrderQuery = `
             UPDATE
                 ${tableSpace}.purchase_orders_header 
             SET
@@ -446,25 +433,57 @@ const PurchaseOrders = () => {
                 , update_at = now()
                 , update_user = $2
             WHERE
-                id = $1
-            RETURNING
-                id;
+                id = $1;
         `;
 
-        const values = [
+        const closingPurchaseOrderValues = [
             data.id
             , data.user_id
         ];
 
+        const accountsPayableInsertQuery = `
+            INSERT INTO
+                ${tableSpace}.accounts_payable (
+                    purchase_order_header_id
+                    , provider_id
+                    , status_id
+                    , installment
+                    , installments_number
+                    , value
+                    , payment_forecast
+                    , create_user
+                )
+            VALUES (
+                $1
+                , $2
+                , (
+                    SELECT
+                        id
+                    FROM
+                        ${tableSpace}.status
+                    WHERE
+                        description = $3
+                )
+                , $4
+                , $5
+                , $6
+                , $7::timestamp
+                , $8
+            );
+        `;
+
         return purchaseOrderClosingExecution(
-            verificationQuery
-            , closingQuery
-            , values
+            statusVerificationQuery
+            , closingPurchaseOrderQuery
+            , accountsPayableInsertQuery
+            , statusVerificationValues
+            , closingPurchaseOrderValues
+            , data
         );
 
     };
     const receiving = (data) => {
-        const verificationQuery = `
+        const statusVerificationQuery = `
             SELECT
                 closing_date
                 , receipt_date
@@ -474,7 +493,11 @@ const PurchaseOrders = () => {
                 id = $1;
         `;
 
-        const receivingQuery = `
+        const statusVerificationValues = [
+            data.id
+        ];
+
+        const receivingPurchaseOrderQuery = `
             UPDATE
                 ${tableSpace}.purchase_orders_header 
             SET
@@ -490,10 +513,13 @@ const PurchaseOrders = () => {
                 , update_at = now()
                 , update_user = $2
             WHERE
-                id = $1
-            RETURNING
-                id;
+                id = $1;
         `;
+
+        const receivingPurchaseOrderValues = [
+            data.id
+            , data.user_id
+        ];
 
         const purchaseOrderItemsQuery = `
             SELECT
@@ -513,6 +539,10 @@ const PurchaseOrders = () => {
                 );
         `;
 
+        const purchaseOrderItemsValues = [
+            data.id
+        ];
+
         const stockUpdateQuery = `
             UPDATE
                 ${tableSpace}.products_stock
@@ -524,31 +554,108 @@ const PurchaseOrders = () => {
                 product_id = $1;
         `;
 
-        const values = [
+        return purchaseOrderReceivingExecution(
+            statusVerificationQuery
+            , receivingPurchaseOrderQuery
+            , purchaseOrderItemsQuery
+            , stockUpdateQuery
+            , statusVerificationValues
+            , receivingPurchaseOrderValues
+            , purchaseOrderItemsValues
+            , data
+        );
+
+    };
+    const deleting = (data) => {
+        // item is already deleted verification
+        
+        const itemDeletedVerificationQuery = `
+            SELECT
+                deleted_at
+            FROM
+                ${tableSpace}.purchase_orders_header
+            WHERE
+                id = $1
+                AND deleted_at IS NOT NULL;
+        `;
+
+        const itemDeletedVerificationValues = [
+            data.id
+        ];
+
+        // item is closed verification
+
+        const itemIsClosedVerificationQuery = `
+            SELECT
+                closing_date
+            FROM
+                ${tableSpace}.purchase_orders_header
+            WHERE
+                id = $1;
+        `;
+
+        const itemIsClosedVerificationValues = [
+            data.id
+        ];
+
+        // purchase order deleting query
+
+        const deletingPurchaseOrderQuery = `
+            UPDATE
+                ${tableSpace}.purchase_orders_header
+            SET
+                deleted_at = now()
+                , deleted_user = $2
+            WHERE
+                id = $1;
+        `;
+
+        const deletingPurchaseOrderValues = [
             data.id
             , data.user_id
         ];
 
-        return purchaseOrderReceivingExecution(
-            verificationQuery
-            , receivingQuery
-            , purchaseOrderItemsQuery
-            , stockUpdateQuery
-            , values
-        );
+        // purchase order items deleting query
 
+        const deletingPurchaseOrderItemsQuery = `
+            UPDATE
+                ${tableSpace}.purchase_orders_items
+            SET
+                deleted_at = now()
+                , deleted_user = $2
+            WHERE
+                purchase_order_header_id = $1;
+        `;
+
+        const deletingPurchaseOrderItemsValues = [
+            data.id
+            , data.user_id
+        ];    
+
+        return purchaseOrederDeletingExecution(
+            itemDeletedVerificationQuery
+            , itemIsClosedVerificationQuery
+            , deletingPurchaseOrderQuery
+            , deletingPurchaseOrderItemsQuery
+            , itemDeletedVerificationValues
+            , itemIsClosedVerificationValues
+            , deletingPurchaseOrderValues
+            , deletingPurchaseOrderItemsValues
+        );
     };
     return {
         getAll
         , getAllOpenOrCanceledOrReceived
         , getData
+        , getItems
         , insert
         , update
         , closing
         , receiving
+        , deleting
     };
 };
 
 module.exports = {
-    PurchaseOrders
+    purchaseOrders
 };

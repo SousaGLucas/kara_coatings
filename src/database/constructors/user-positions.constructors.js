@@ -1,9 +1,11 @@
 require('dotenv/config');
 
-const { queryExecution } = require("../database");
+const standardExecution = require("../controllers/standard.controllers");
+const userPositionDeletingExecution = require("../controllers/user-positions.controllers");
+
 const tableSpace = process.env.DB_TABLESPACE;
 
-const UserPositions = () => {
+const userPositions = () => {
     const getAll = () => {
         const query = `
             SELECT
@@ -19,9 +21,7 @@ const UserPositions = () => {
                 upos.deleted_at ISNULL;
         `;
 
-        const values = [];
-    
-        return queryExecution(query, values);
+        return standardExecution(query, []);
     };
     const getAllActiveOrInactive = (data) => {
         const query = `
@@ -50,7 +50,7 @@ const UserPositions = () => {
             data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveAndInactiveForId = (data) => {
         const query = `
@@ -72,7 +72,7 @@ const UserPositions = () => {
             data.id
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveOrInactiveForId = (data) => {
         const query = `
@@ -103,7 +103,7 @@ const UserPositions = () => {
             , data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveAndInactiveForName = (data) => {
         const query = `
@@ -125,7 +125,7 @@ const UserPositions = () => {
             data.name
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveOrInactiveForName = (data) => {
         const query = `
@@ -156,7 +156,7 @@ const UserPositions = () => {
             , data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const insert = (data) => {
         const query = `
@@ -188,7 +188,7 @@ const UserPositions = () => {
             , data.user_id
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const update = (data) => {
         const query = `
@@ -220,7 +220,66 @@ const UserPositions = () => {
             , data.user_id
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
+    };
+    const deleting = (data) => {
+        // item is already deleted verification
+
+        const itemDeletedVerificationQuery = `
+            SELECT
+                deleted_at
+            FROM
+                ${tableSpace}.user_positions
+            WHERE
+                id = $1
+                AND deleted_at IS NOT NULL;
+        `;
+
+        const itemDeletedVerificationValues = [
+            data.id
+        ];
+
+        // item is in users table verification
+
+        const itemInUsersTableVerificationQuery = `
+            SELECT
+                deleted_at
+            FROM
+                ${tableSpace}.users
+            WHERE
+                user_position_id = $1
+                AND deleted_at ISNULL;
+        `;
+
+        const itemInUsersTableVerificationValues = [
+            data.id
+        ];
+
+        // deleting verification
+
+        const deletingitemQuery = `
+            UPDATE
+                ${tableSpace}.user_positions
+            SET
+                deleted_at = now()
+                , deleted_user = $2
+            WHERE
+                id = $1;
+        `;
+
+        const deletingitemValues = [
+            data.id
+            , data.user_id
+        ];
+
+        return userPositionDeletingExecution(
+            itemDeletedVerificationQuery
+            , itemInUsersTableVerificationQuery
+            , deletingitemQuery
+            , itemDeletedVerificationValues
+            , itemInUsersTableVerificationValues
+            , deletingitemValues
+        );
     };
     return {
         getAll
@@ -231,9 +290,10 @@ const UserPositions = () => {
         , getActiveOrInactiveForName
         , insert
         , update
+        , deleting
     };
 };
 
 module.exports = {
-    UserPositions
+    userPositions
 };

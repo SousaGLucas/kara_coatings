@@ -41,15 +41,18 @@ POST http://localhost:3000/user-positions HTTP/1.1
 Content-Type: application/json
 
 {
-    "position": "almoxarife"
+    "position": "test"
     , "status": "active"
 }
 
 ### user position update
-PUT http://localhost:3000/user-positions/2 HTTP/1.1
+PUT http://localhost:3000/user-positions/9 HTTP/1.1
 Content-Type: application/json
 
 {
-    "position": "administrador"
-    , "status": "active"
+    "position": "test"
+    , "status": "inactive"
 }
+
+### user position delete
+DELETE http://localhost:3000/user-positions/9 HTTP/1.1

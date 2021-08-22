@@ -21,19 +21,19 @@ GET http://localhost:3000/products-status-id/inactive/1 HTTP/1.1
 
 
 ### active and inactive products for name query proccess
-GET http://localhost:3000/products-name/Ceramica HTTP/1.1
+GET http://localhost:3000/products-name/Cub HTTP/1.1
 
 
 ### active products for name query proccess
-GET http://localhost:3000/products-status-name/active/Ceramica HTTP/1.1
+GET http://localhost:3000/products-status-name/active/Cub HTTP/1.1
 
 
 ### inactive products for name query proccess
-GET http://localhost:3000/products-status-name/inactive/Ceramica HTTP/1.1
+GET http://localhost:3000/products-status-name/inactive/Cub HTTP/1.1
 
 
 ### product data query proccess
-GET http://localhost:3000/products-data/1 HTTP/1.1
+GET http://localhost:3000/products-data/ HTTP/1.1
 
 
 ### products record
@@ -44,22 +44,26 @@ Content-Type: application/json
     "product_group": "ceramicas"
     , "status": "active"
     , "unit": "m2"
-    , "name": "Artico Lux P82004 82cmX82cm LC V3"
+    , "name": "test"
     , "cost_price": "32.43"
     , "profit_margin": "50.02"
     , "sale_price": "48.65"
 }
 
 ### products update
-PUT http://localhost:3000/products/1 HTTP/1.1
+PUT http://localhost:3000/products/12 HTTP/1.1
 Content-Type: application/json
 
 {
     "product_group": "ceramicas"
     , "status": "active"
     , "unit": "m2"
-    , "name": "Cube White ART58955 33cmX60cm R"
+    , "name": "test2"
     , "cost_price": "14.30"
     , "profit_margin": "50.00"
     , "sale_price": "21.45"
 }
+
+
+### product delete
+DELETE http://localhost:3000/products/12 HTTP/1.1

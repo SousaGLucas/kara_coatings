@@ -2,15 +2,19 @@ const jwt = require("jsonwebtoken");
 
 const router = require("./index");
 
-const { UserPositions } = require("../../database/controllers/user-positions.controller");
+const { userPositions } = require("../../database/constructors/user-positions.constructors");
 
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6Imx1Y2Fzc291c2EiLCJ1c2VyX3Bvc2l0aW9uIjoiZGV2ZWxvcGVyIiwiaWF0IjoxNjI5MjA4OTk2fQ.SMwdN94BxFk9nUhgd0Q4B0J5jd0V3AWCpb3mrSQnqqY";
+const errorRecord = require("../../log/log-record");
 
 const authentication = (token) => {
     return new Promise((resolve, reject) => {
         jwt.verify(token, process.env.SECRET, (err) => {
             if (err){
-                reject(err);
+                const error = {
+                    type: "forbidden"
+                    , err: err
+                };
+                reject(error);
             } else {
                 resolve();
             };
@@ -19,26 +23,34 @@ const authentication = (token) => {
 };
 
 router.get("/user-positions", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     authentication(token)
         .then(() => {
-            UserPositions()
-                .getAll()
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return userPositions().getAll();
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/user-positions-status/:status", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         status: req.params.status
@@ -46,22 +58,30 @@ router.get("/user-positions-status/:status", (req, res) => {
 
     authentication(token)
         .then(() => {
-            UserPositions()
-                .getAllActiveOrInactive(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return userPositions().getAllActiveOrInactive(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/user-positions-id/:id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         id: req.params.id
@@ -69,22 +89,30 @@ router.get("/user-positions-id/:id", (req, res) => {
 
     authentication(token)
         .then(() => {
-            UserPositions()
-                .getActiveAndInactiveForId(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return userPositions().getActiveAndInactiveForId(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/user-positions-status-id/:status/:id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         id: req.params.id
@@ -93,22 +121,30 @@ router.get("/user-positions-status-id/:status/:id", (req, res) => {
 
     authentication(token)
         .then(() => {
-            UserPositions()
-                .getActiveOrInactiveForId(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return userPositions().getActiveOrInactiveForId(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/user-positions-name/:name", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         name: req.params.name
@@ -116,22 +152,30 @@ router.get("/user-positions-name/:name", (req, res) => {
 
     authentication(token)
         .then(() => {
-            UserPositions()
-                .getActiveAndInactiveForName(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return userPositions().getActiveAndInactiveForName(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/user-positions-status-name/:status/:name", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         name: req.params.name
@@ -140,22 +184,30 @@ router.get("/user-positions-status-name/:status/:name", (req, res) => {
 
     authentication(token)
         .then(() => {
-            UserPositions()
-                .getActiveOrInactiveForName(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return userPositions().getActiveOrInactiveForName(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.post("/user-positions", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
     
     const data = {
         position: req.body.position
@@ -165,23 +217,34 @@ router.post("/user-positions", (req, res) => {
     authentication(token)
         .then(() => {
             data.user_id = jwt.decode(token).user_id;
-            console.log(data);
-            UserPositions()
-                .insert(data)
-                .then((result) => {
-                    res.status(200).send({"msg": "user position added successfully", "id": result[0].id});
-                }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return userPositions().insert(data);
+        }).then((result) => {
+            const response = {
+                "id": result[0].id
+                , "msg": "user position added successfully"
+            };
+            res.status(200).send(response);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.put("/user-positions/:id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         id: req.params.id
@@ -192,17 +255,65 @@ router.put("/user-positions/:id", (req, res) => {
     authentication(token)
         .then(() => {
             data.user_id = jwt.decode(token).user_id;
-            UserPositions()
-                .update(data)
-                    .then((result) => {
-                        res.status(200).send({"msg": "user position changed successfully", "id": result[0].id});
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return userPositions().update(data);
+        }).then((result) => {
+            const response = {
+                "id": result[0].id
+                , "msg": "user position changed successfully"
+            };
+            res.status(200).send(response);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
+        });
+});
+
+router.delete("/user-positions/:id", (req, res) => {
+    const token = req.cookies.token;
+
+    const data = {
+        id: req.params.id
+    };
+
+    authentication(token)
+        .then(() => {
+            data.user_id = jwt.decode(token).user_id;
+            return userPositions().deleting(data);
+        }).then(() => {
+            const response = {
+                id: data.id
+                , msg: "user position deleted successfully"
+            };
+            res.status(200).send(response);
+        }).catch((err) => {
+            const error = {
+                err: err.err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 

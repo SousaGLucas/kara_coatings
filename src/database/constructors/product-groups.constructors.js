@@ -1,9 +1,11 @@
 require('dotenv/config');
 
-const { queryExecution } = require("../database");
+const standardExecution = require("../controllers/standard.controllers");
+const productGroupDeletingExecution = require("../controllers/product-groups.controllers");
+
 const tableSpace = process.env.DB_TABLESPACE;
 
-const ProductGroups = () => {
+const productGroups = () => {
     const getAll = () => {
         const query = `
             SELECT
@@ -18,10 +20,8 @@ const ProductGroups = () => {
             WHERE
                 pgr.deleted_at ISNULL;
         `;
-
-        const values = [];
       
-        return queryExecution(query, values);
+        return standardExecution(query, []);
     };
     const getAllActiveOrInactive = (data) => {
         const query = `
@@ -50,7 +50,7 @@ const ProductGroups = () => {
             data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveAndInactiveForId = (data) => {
         const query = `
@@ -72,7 +72,7 @@ const ProductGroups = () => {
             data.name
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveOrInactiveForId = (data) => {
         const query = `
@@ -103,7 +103,7 @@ const ProductGroups = () => {
             , data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveAndInactiveForName = (data) => {
         const query = `
@@ -125,7 +125,7 @@ const ProductGroups = () => {
             data.name
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveOrInactiveForName = (data) => {
         const query = `
@@ -156,7 +156,7 @@ const ProductGroups = () => {
             , data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const insert = (data) => {
         const query = `
@@ -188,7 +188,7 @@ const ProductGroups = () => {
             , data.user_id
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const update = (data) => {
         const query = `
@@ -220,7 +220,66 @@ const ProductGroups = () => {
             , data.user_id
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
+    };
+    const deleting = (data) => {
+        // item is already deleted verification
+        
+        const itemDeletedVerificationQuery = `
+            SELECT
+                deleted_at
+            FROM
+                ${tableSpace}.product_groups
+            WHERE
+                id = $1
+                AND deleted_at IS NOT NULL;
+        `;
+
+        const itemDeletedVerificationValues = [
+            data.id
+        ];
+
+        // item is in products table verification
+
+        const itemInProductsTableVerificationQuery = `
+            SELECT
+                product_group_id
+            FROM
+                ${tableSpace}.products
+            WHERE
+                product_group_id = $1
+                AND deleted_at ISNULL;
+        `;
+
+        const itemInProductsTableVerificationValues = [
+            data.id
+        ];
+
+        // deleting query
+
+        const deletingitemQuery = `
+            UPDATE
+                ${tableSpace}.product_groups
+            SET
+                deleted_at = now()
+                , deleted_user = $2
+            WHERE
+                id = $1;
+        `;
+
+        const deletingitemValues = [
+            data.id
+            , data.user_id
+        ];
+
+        return productGroupDeletingExecution(
+            itemDeletedVerificationQuery
+            , itemInProductsTableVerificationQuery
+            , deletingitemQuery
+            , itemDeletedVerificationValues
+            , itemInProductsTableVerificationValues
+            , deletingitemValues
+        );
     };
     return {
         getAll
@@ -231,9 +290,10 @@ const ProductGroups = () => {
         , getActiveOrInactiveForName
         , insert
         , update
+        , deleting
     };
 };
 
 module.exports = {
-    ProductGroups
+    productGroups
 };

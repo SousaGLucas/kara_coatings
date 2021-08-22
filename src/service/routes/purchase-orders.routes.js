@@ -2,15 +2,19 @@ const jwt = require("jsonwebtoken");
 
 const router = require("./index");
 
-const { PurchaseOrders } = require("../../database/controllers/purchase-orders.controller");
+const { purchaseOrders } = require("../../database/constructors/purchase-orders.constructors");
 
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6Imx1Y2Fzc291c2EiLCJ1c2VyX3Bvc2l0aW9uIjoiZGV2ZWxvcGVyIiwiaWF0IjoxNjI5MjA4OTk2fQ.SMwdN94BxFk9nUhgd0Q4B0J5jd0V3AWCpb3mrSQnqqY";
+const errorRecord = require("../../log/log-record");
 
 const authentication = (token) => {
     return new Promise((resolve, reject) => {
         jwt.verify(token, process.env.SECRET, (err) => {
             if (err){
-                reject(err);
+                const error = {
+                    type: "forbidden"
+                    , err: err
+                };
+                reject(error);
             } else {
                 resolve();
             };
@@ -19,26 +23,34 @@ const authentication = (token) => {
 };
 
 router.get("/purchase-orders", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     authentication(token)
         .then(() => {
-            PurchaseOrders()
-                .getAll()
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return purchaseOrders().getAll();
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/purchase-orders-status/:status", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         status: req.params.status
@@ -46,48 +58,70 @@ router.get("/purchase-orders-status/:status", (req, res) => {
 
     authentication(token)
         .then(() => {
-            PurchaseOrders()
-                .getAllOpenOrCanceledOrReceived(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return purchaseOrders().getAllOpenOrCanceledOrReceived(data);
+        }).then((result) => {
+            res.status(200).send(result);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.get("/purchase-orders-data/:id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         id: req.params.id
     };
 
+    const response = {};
+
     authentication(token)
         .then(() => {
-            PurchaseOrders()
-                .getData(data)
-                    .then((result) => {
-                        res.status(200).send(result);
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return purchaseOrders().getData(data);
+        }).then((result) => {
+            response.data = result[0];
+            return purchaseOrders().getItems(data);
+        }).then((result) => {
+            response.data.items = result;
+            res.status(200).send(response);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.post("/purchase-orders", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
     
     const data = {
-        provider: req.body.provider
+        provider_id: req.body.provider_id
         , status: req.body.status
         , total: parseFloat(req.body.total)
         , items: req.body.items
@@ -96,27 +130,38 @@ router.post("/purchase-orders", (req, res) => {
     authentication(token)
         .then(() => {
             data.user_id = jwt.decode(token).user_id;
-            PurchaseOrders()
-                .insert(data)
-                    .then((result) => {
-                        res.status(200).send({
-                            "msg": "purchase order added successfully"
-                            , "id": result[0].purchase_order_header_id});
-                    }).catch((err) => {
-                        console.log(err);
-                        res.status(500).end();
-                    });
+            return purchaseOrders().insert(data);
+        }).then((result) => {
+            const response = {
+                "id": result.purchase_order_header_id
+                , "msg": "purchase order added successfully"
+            };
+            res.status(200).send(response);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.put("/purchase-orders/:id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         id: req.params.id
+        , provider_id: req.body.provider_id
         , status: req.body.status
         , total: parseFloat(req.body.total)
         , items: req.body.items
@@ -125,52 +170,75 @@ router.put("/purchase-orders/:id", (req, res) => {
     authentication(token)
         .then(() => {
             data.user_id = jwt.decode(token).user_id;
-            PurchaseOrders()
-                .update(data)
-                    .then((result) => {
-                        res.status(200).send({
-                            "msg": "purchase order changed successfully"
-                            , "id": result[0].purchase_order_header_id
-                        });
-                    }).catch((err) => {
-                        console.dir(err);
-                        res.status(500).end();
-                    });
+            return purchaseOrders().update(data);
+        }).then(() => {
+            const response = {
+                "id": data.id
+                , "msg": "purchase order changed successfully"
+            };
+            res.status(200).send(response);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.put("/purchase-orders-closing/:id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         id: req.params.id
+        , provider_id: req.body.provider_id
+        , status: req.body.status
+        , installments_number: req.body.installments_number
+        , value: req.body.value
+        , payment_forecast: req.body.payment_forecast
     };
 
     authentication(token)
         .then(() => {
             data.user_id = jwt.decode(token).user_id;
-            PurchaseOrders()
-                .closing(data)
-                    .then((result) => {
-                        res.status(200).send({
-                            "msg": "purchase order closing successfully"
-                            , "id": result[0].id
-                        });
-                    }).catch((err) => {
-                        console.dir(err);
-                        res.status(500).end();
-                    });
+            return purchaseOrders().closing(data);
+        }).then(() => {
+            const response = {
+                "id": data.id
+                , "msg": "purchase order closing successfully"
+            };
+            res.status(200).send(response);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 
 router.put("/purchase-orders-receiving/:id", (req, res) => {
-    // const token = req.cookies.token;
+    const token = req.cookies.token;
 
     const data = {
         id: req.params.id
@@ -179,19 +247,65 @@ router.put("/purchase-orders-receiving/:id", (req, res) => {
     authentication(token)
         .then(() => {
             data.user_id = jwt.decode(token).user_id;
-            PurchaseOrders()
-                .receiving(data)
-                    .then((result) => {
-                        res.status(200).send({
-                            "msg": "purchase order receiving successfully"
-                        });
-                    }).catch((err) => {
-                        console.dir(err);
-                        res.status(500).end();
-                    });
+            return purchaseOrders().receiving(data);
+        }).then(() => {
+            response = {
+                id: data.id
+                , "msg": "purchase order receiving successfully"
+            };
+            res.status(200).send(response);
         }).catch((err) => {
-            console.log(err);
-            res.status(403).end();
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
+        });
+});
+
+router.delete("/purchase-orders/:id", (req, res) => {
+    const token = req.cookies.token;
+
+    const data = {
+        id: req.params.id
+    };
+
+    authentication(token)
+        .then(() => {
+            data.user_id = jwt.decode(token).user_id;
+            return purchaseOrders().deleting(data);
+        }).then(() => {
+            const response = {
+                id: data.id
+                , msg: "purchase order deleted successfully"
+            };
+            res.status(200).send(response);
+        }).catch((err) => {
+            const error = {
+                err: err
+            };
+
+            switch (err.type){
+                case "forbidden":
+                    res.status(403).send(err.err);
+                    break;
+                case "internal":
+                    errorRecord(error);
+                    res.status(500).send("internal error");
+                    break;
+                default:
+                    break;
+            };
         });
 });
 

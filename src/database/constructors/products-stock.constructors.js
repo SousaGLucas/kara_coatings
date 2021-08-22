@@ -1,9 +1,10 @@
 require('dotenv/config');
 
-const { queryExecution } = require("../database");
+const standardExecution = require("../controllers/standard.controllers");
+
 const tableSpace = process.env.DB_TABLESPACE;
 
-const ProductsStock = () => {
+const productsStock = () => {
     const getAll = () => {
         const query = `
             SELECT
@@ -14,10 +15,8 @@ const ProductsStock = () => {
             WHERE
                 deleted_at ISNULL;
         `;
-
-        const values = [];
       
-        return queryExecution(query, values);
+        return standardExecution(query, []);
     };
     const getForId = (data) => {
         const query = `
@@ -35,7 +34,7 @@ const ProductsStock = () => {
             data.product_id
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     return {
         getAll
@@ -44,5 +43,5 @@ const ProductsStock = () => {
 };
 
 module.exports = {
-    ProductsStock
+    productsStock
 };

@@ -1,9 +1,14 @@
 require('dotenv/config');
 
-const { queryExecution } = require("../database");
+const standardExecution = require("../controllers/standard.controllers");
+const {
+    providersInsertOrUpdateExecution
+    , providerDeletingExecution
+} = require("../controllers/providers.controllers");
+
 const tableSpace = process.env.DB_TABLESPACE;
 
-const Providers = () => {
+const providers = () => {
     const getAll = () => {
         const query = `
             SELECT
@@ -18,10 +23,8 @@ const Providers = () => {
             WHERE
                 prov.deleted_at ISNULL;
         `;
-
-        const values = [];
-      
-        return queryExecution(query, values);
+        
+        return standardExecution(query, []);
     };
     const getAllActiveOrInactive = (data) => {
         const query = `
@@ -50,7 +53,7 @@ const Providers = () => {
             data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveAndInactiveForId = (data) => {
         const query = `
@@ -72,7 +75,7 @@ const Providers = () => {
             data.name
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveOrInactiveForId = (data) => {
         const query = `
@@ -103,7 +106,7 @@ const Providers = () => {
             , data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveAndInactiveForName = (data) => {
         const query = `
@@ -125,7 +128,7 @@ const Providers = () => {
             data.name
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveOrInactiveForName = (data) => {
         const query = `
@@ -156,7 +159,7 @@ const Providers = () => {
             , data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getData = (data) => {
         const query = `
@@ -185,10 +188,24 @@ const Providers = () => {
             data.id
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const insert = (data) => {
-        const query = `
+        const documentVerificationQuery = `
+            SELECT
+                document
+            FROM
+                ${tableSpace}.providers
+            WHERE
+                document = $1
+                AND deleted_at ISNULL;
+        `;
+
+        const documentVerificationValues = [
+            data.document
+        ];
+
+        const insertQuery = `
             INSERT INTO
                 ${tableSpace}.providers (
                     status_id
@@ -233,7 +250,7 @@ const Providers = () => {
                 id;
         `;
 
-        const values = [
+        const insertValues = [
             data.status
             , data.name
             , data.document
@@ -250,10 +267,31 @@ const Providers = () => {
             , data.user_id
         ];
 
-        return queryExecution(query, values);
+        return providersInsertOrUpdateExecution(
+            documentVerificationQuery
+            , insertQuery
+            , documentVerificationValues
+            , insertValues
+        );
     };
     const update = (data) => {
-        const query = `
+        const documentVerificationQuery = `
+            SELECT
+                document
+            FROM
+                ${tableSpace}.providers
+            WHERE
+                id <> $1
+                AND document = $2
+                AND deleted_at ISNULL;
+        `;
+
+        const documentVerificationValues = [
+            data.id
+            , data.document
+        ];
+
+        const insertQuery = `
             UPDATE
                 ${tableSpace}.providers
             SET
@@ -286,7 +324,7 @@ const Providers = () => {
                 id;
         `;
 
-        const values = [
+        const insertValues = [
             data.id
             , data.status
             , data.name
@@ -304,7 +342,89 @@ const Providers = () => {
             , data.user_id
         ];
 
-        return queryExecution(query, values);
+        return providersInsertOrUpdateExecution(
+            documentVerificationQuery
+            , insertQuery
+            , documentVerificationValues
+            , insertValues
+        );
+    };
+    const deleting = (data) => {
+        // item is already deleted verification
+        
+        const itemDeletedVerificationQuery = `
+            SELECT
+                deleted_at
+            FROM
+                ${tableSpace}.providers
+            WHERE
+                id = $1
+                AND deleted_at IS NOT NULL;
+        `;
+
+        const itemDeletedVerificationValues = [
+            data.id
+        ];
+
+        // item is in purchase orders header table verification
+
+        const itemInPurchaseOrdersHeaderTableVerificationQuery = `
+            SELECT
+                provider_id
+            FROM
+                ${tableSpace}.purchase_orders_header
+            WHERE
+                provider_id = $1
+                AND deleted_at ISNULL;
+        `;
+
+        const itemInPurchaseOrdersHeaderTableVerificationValues = [
+            data.id
+        ];
+
+        // item is in accounts payable table verification
+
+        const itemInAccountsPayableTableVerificationQuery = `
+            SELECT
+                provider_id
+            FROM
+                ${tableSpace}.accounts_payable
+            WHERE
+                provider_id = $1
+                AND deleted_at ISNULL;
+        `;
+
+        const itemInAccountsPayableTableVerificationValues = [
+            data.id
+        ];
+
+        // deleting query
+
+        const deletingitemQuery = `
+            UPDATE
+                ${tableSpace}.providers
+            SET
+                deleted_at = now()
+                , deleted_user = $2
+            WHERE
+                id = $1;
+        `;
+
+        const deletingitemValues = [
+            data.id
+            , data.user_id
+        ];
+
+        return providerDeletingExecution(
+            itemDeletedVerificationQuery
+            , itemInPurchaseOrdersHeaderTableVerificationQuery
+            , itemInAccountsPayableTableVerificationQuery
+            , deletingitemQuery
+            , itemDeletedVerificationValues
+            , itemInPurchaseOrdersHeaderTableVerificationValues
+            , itemInAccountsPayableTableVerificationValues
+            , deletingitemValues
+        );
     };
     return {
         getAll
@@ -316,9 +436,10 @@ const Providers = () => {
         , getData
         , insert
         , update
+        , deleting
     };
 };
 
 module.exports = {
-    Providers
+    providers
 };

@@ -1,9 +1,11 @@
 require('dotenv/config');
 
-const { queryExecution } = require("../database");
+const standardExecution = require("../controllers/standard.controllers");
+const unitDeletingExecution = require("../controllers/units.controllers");
+
 const tableSpace = process.env.DB_TABLESPACE;
 
-const Units = () => {
+const units = () => {
     const getAll = () => {
         const query = `
             SELECT
@@ -19,9 +21,7 @@ const Units = () => {
                 units.deleted_at ISNULL;
         `;
 
-        const values = [];
-      
-        return queryExecution(query, values);
+        return standardExecution(query, []);
     };
     const getAllActiveOrInactive = (data) => {
         const query = `
@@ -50,7 +50,7 @@ const Units = () => {
             data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveAndInactiveForId = (data) => {
         const query = `
@@ -72,7 +72,7 @@ const Units = () => {
             data.name
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveOrInactiveForId = (data) => {
         const query = `
@@ -103,7 +103,7 @@ const Units = () => {
             , data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveAndInactiveForName = (data) => {
         const query = `
@@ -125,7 +125,7 @@ const Units = () => {
             data.name
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveOrInactiveForName = (data) => {
         const query = `
@@ -156,7 +156,7 @@ const Units = () => {
             , data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const insert = (data) => {
         const query = `
@@ -188,7 +188,7 @@ const Units = () => {
             , data.user_id
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const update = (data) => {
         const query = `
@@ -220,7 +220,66 @@ const Units = () => {
             , data.user_id
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
+    };
+    const deleting = (data) => {
+        // item is already deleted verification
+        
+        const itemDeletedVerificationQuery = `
+            SELECT
+                deleted_at
+            FROM
+                ${tableSpace}.units
+            WHERE
+                id = $1
+                AND deleted_at IS NOT NULL;
+        `;
+
+        const itemDeletedVerificationValues = [
+            data.id
+        ];
+
+        // item is in products table verification
+
+        const itemInProductsTableVerificationQuery = `
+            SELECT
+                unit_id
+            FROM
+                ${tableSpace}.products
+            WHERE
+                unit_id = $1
+                AND deleted_at ISNULL;
+        `;
+
+        const itemInProductsTableVerificationValues = [
+            data.id
+        ];
+
+        // deleting query
+
+        const deletingitemQuery = `
+            UPDATE
+                ${tableSpace}.units
+            SET
+                deleted_at = now()
+                , deleted_user = $2
+            WHERE
+                id = $1;
+        `;
+
+        const deletingitemValues = [
+            data.id
+            , data.user_id
+        ];
+
+        return unitDeletingExecution(
+            itemDeletedVerificationQuery
+            , itemInProductsTableVerificationQuery
+            , deletingitemQuery
+            , itemDeletedVerificationValues
+            , itemInProductsTableVerificationValues
+            , deletingitemValues
+        );
     };
     return {
         getAll
@@ -231,9 +290,10 @@ const Units = () => {
         , getActiveOrInactiveForName
         , insert
         , update
+        , deleting
     };
 };
 
 module.exports = {
-    Units
+    units
 };

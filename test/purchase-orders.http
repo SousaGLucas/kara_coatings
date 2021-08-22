@@ -25,7 +25,7 @@ POST http://localhost:3000/purchase-orders HTTP/1.1
 Content-Type: application/json
 
 {
-    "provider": "Kara Coatings Filial 1"
+    "provider_id": 1
     , "status": "active"
     , "total": 11200.50
     , "items": [
@@ -49,12 +49,12 @@ Content-Type: application/json
 }
 
 ### purchase orders update
-PUT http://localhost:3000/purchase-orders/16 HTTP/1.1
+PUT http://localhost:3000/purchase-orders/21 HTTP/1.1
 Content-Type: application/json
 
 {
-    "provider": "Kara Coatings Filial 1"
-    , "status": "open"
+    "provider_id": 1
+    , "status": "inactive"
     , "total": 11200.50
     , "items": [
         {
@@ -78,10 +78,20 @@ Content-Type: application/json
 
 
 ### purchase orders closing
-PUT http://localhost:3000/purchase-orders-closing/18 HTTP/1.1
+PUT http://localhost:3000/purchase-orders-closing/27 HTTP/1.1
 Content-Type: application/json
+
+{
+    "provider_id": 1
+    , "status": "pending"
+    , "installments_number": 2
+    , "value": 5600.25
+    , "payment_forecast": "2021-09-21"
+}
 
 
 ### purchase orders receiving
-PUT http://localhost:3000/purchase-orders-receiving/18 HTTP/1.1
-Content-Type: application/json
+PUT http://localhost:3000/purchase-orders-receiving/22 HTTP/1.1
+
+### purchase order delete
+DELETE http://localhost:3000/purchase-orders/16 HTTP/1.1

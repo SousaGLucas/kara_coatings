@@ -1,9 +1,14 @@
 require('dotenv/config');
 
-const { queryExecution, productInsertExecution } = require("../database");
+const standardExecution = require("../controllers/standard.controllers");
+const { 
+    productInsertExecution
+    , productDeletingExecution
+} = require("../controllers/products.controllers");
+
 const tableSpace = process.env.DB_TABLESPACE;
 
-const Products = () => {
+const products = () => {
     const getAll = () => {
         const query = `
             SELECT
@@ -28,9 +33,7 @@ const Products = () => {
                 prod.deleted_at ISNULL;
         `;
 
-        const values = [];
-      
-        return queryExecution(query, values);
+        return standardExecution(query, []);
     };
     const getAllActiveOrInactive = (data) => {
         const query = `
@@ -68,7 +71,7 @@ const Products = () => {
             data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveAndInactiveForId = (data) => {
         const query = `
@@ -99,7 +102,7 @@ const Products = () => {
             data.name
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveOrInactiveForId = (data) => {
         const query = `
@@ -139,7 +142,7 @@ const Products = () => {
             , data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveAndInactiveForName = (data) => {
         const query = `
@@ -170,7 +173,7 @@ const Products = () => {
             data.name
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getActiveOrInactiveForName = (data) => {
         const query = `
@@ -210,7 +213,7 @@ const Products = () => {
             , data.status
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const getData = (data) => {
         const query = `
@@ -243,10 +246,10 @@ const Products = () => {
             data.id
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
     };
     const insert = (data) => {
-        const productQuery = `
+        const productInsertQuery = `
             INSERT INTO
                 ${tableSpace}.products (
                     product_group_id
@@ -293,7 +296,7 @@ const Products = () => {
                 id;
         `;
 
-        const productValues = [
+        const productInsertValues = [
             data.product_group
             , data.status
             , data.unit
@@ -304,7 +307,7 @@ const Products = () => {
             , data.user_id
         ];
 
-        const stockQuery = `
+        const stockInsertQuery = `
             INSERT INTO
                 ${tableSpace}.products_stock (
                     product_id
@@ -320,16 +323,11 @@ const Products = () => {
                 product_id;
         `;
 
-        const stockValues = [
-            0.00
-            , data.user_id
-        ];
-
         return productInsertExecution(
-            productQuery
-            , productValues
-            , stockQuery
-            , stockValues
+            productInsertQuery
+            , productInsertValues
+            , stockInsertQuery
+            , data
         );
     };
     const update = (data) => {
@@ -386,8 +384,85 @@ const Products = () => {
             , data.user_id
         ];
 
-        return queryExecution(query, values);
+        return standardExecution(query, values);
+    };
+    const deleting = (data) => {
+        // item is already deleted verification
+        
+        const itemDeletedVerificationQuery = `
+            SELECT
+                deleted_at
+            FROM
+                ${tableSpace}.products
+            WHERE
+                id = $1
+                AND deleted_at IS NOT NULL;
+        `;
 
+        const itemDeletedVerificationValues = [
+            data.id
+        ];
+
+        // item is in purchase orders items table verification
+
+        const itemInPurchaseOrdersItemsTableVerificationQuery = `
+            SELECT
+                product_id
+            FROM
+                ${tableSpace}.purchase_orders_items
+            WHERE
+                product_id = $1
+                AND deleted_at ISNULL;
+        `;
+
+        const itemInPurchaseOrdersItemsTableVerificationValues = [
+            data.id
+        ];
+
+        // product deleting query
+
+        const deletingProductQuery = `
+            UPDATE
+                ${tableSpace}.products
+            SET
+                deleted_at = now()
+                , deleted_user = $2
+            WHERE
+                id = $1;
+        `;
+
+        const deletingProductValues = [
+            data.id
+            , data.user_id
+        ];
+
+        // products stock deleting query
+
+        const deletingProductsStockQuery = `
+            UPDATE
+                ${tableSpace}.products_stock
+            SET
+                deleted_at = now()
+                , deleted_user = $2
+            WHERE
+                product_id = $1;
+        `;
+
+        const deletingProductsStockValues = [
+            data.id
+            , data.user_id
+        ];    
+
+        return productDeletingExecution(
+            itemDeletedVerificationQuery
+            , itemInPurchaseOrdersItemsTableVerificationQuery
+            , deletingProductQuery
+            , deletingProductsStockQuery
+            , itemDeletedVerificationValues
+            , itemInPurchaseOrdersItemsTableVerificationValues
+            , deletingProductValues
+            , deletingProductsStockValues
+        );
     };
     return {
         getAll
@@ -399,9 +474,10 @@ const Products = () => {
         , getData
         , insert
         , update
+        , deleting
     };
 };
 
 module.exports = {
-    Products
+    products
 };
